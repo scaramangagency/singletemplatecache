@@ -1,0 +1,153 @@
+{% extends '_layouts/cp' %}
+{% from "_includes/forms" import text -%}
+
+{% set title = 'Delete A Single Template Cache'|t %}
+{% set caches = craft.SingleTemplateCache.getAll %}
+
+{% set content %}
+
+
+  {% if caches|length == 0 %}
+    <p id="no-reroutes">{{ 'There are no template caches!'|t }}</p>
+  {% else %}
+
+    <div class="main">
+      <div class="toolbar">
+        <table class="inputs fullwidth collapsible">
+          <tr>
+            <td>
+              <div class="texticon search icon clearable">
+                {{ text({
+                  placeholder: "Search"|t
+                }) }}
+                <div class="clear hidden" title="{{ 'Clear'|t }}"></div>
+              </div>
+            </td>
+          </tr>
+        </table>
+        <div class="spinner hidden"></div>
+        <div class="elements"></div>
+      </div>
+    </div>
+
+
+    <div class="buttons">
+      <a class="btn submit disabled multipleDelete icon">{{ 'Delete selected'|t }}</a>
+    </div>
+    <div class="elements">
+      <div class="tableview">
+        <table id="caches" class="data fullwidth">
+          <thead>
+            <td class="thin checkbox-cell">&nbsp;</td>
+            <th scope="col">{{ 'Cache Key'|t }}</th>
+            <th scope="col">{{ 'Path'|t }}</th>
+            <th style="width: 60px">{{ 'Delete'|t }}</th>
+          </thead>
+          <tbody class="caches--replace">
+            {% for cache in caches %}
+              <tr data-id="{{ cache.cacheKey }}" data-name="{{ cache.cacheKey }}">
+                <td><div class="checkbox" title="Select" data-id="{{ cache.cacheKey }}"></div></td>
+                <td>{{ cache.cacheKey }}</td>
+                <td>{{ cache.path }}</td>
+                <td><a class="delete icon" title="{{ 'Delete'|t }}"></a></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="buttons">
+      <a class="btn submit disabled multipleDelete icon">{{ 'Delete selected'|t }}</a>
+    </div>
+  {% endif %}
+
+{% endset %}
+
+{% set js %}
+  new Craft.AdminTable({
+    tableSelector: '#caches',
+    noObjectsSelector: '#no-caches',
+    deleteAction: 'SingleTemplateCache/delete'
+  });
+
+  var timer;
+
+  window.csrfTokenName = "{{ craft.config.csrfTokenName|e('js') }}";
+  window.csrfTokenValue = "{{ craft.request.csrfToken|e('js') }}";
+
+  function doAjax(post, method, callback) {
+    post[csrfTokenName] = csrfTokenValue;
+
+    $.ajax({
+      method: 'POST',
+      url: method,
+      data: post,
+      success: function(data) {
+        $('.spinner').addClass('hidden');
+        $('tbody.caches--replace').html(data['html']);
+
+        new Craft.AdminTable({
+          tableSelector: '#caches',
+          deleteAction: 'SingleTemplateCache/delete'
+        });
+
+        if (callback)
+          callback();
+      }
+    });
+  }
+
+  function doClear() {
+    $('.text.fullwidth').val('');
+    $('.spinner').removeClass('hidden');
+
+    $(this).addClass('hidden');
+    var data = { search: '' };
+    data[csrfTokenName] = csrfTokenValue;
+
+    doAjax(data, '/actions/SingleTemplateCache/search');
+  }
+
+  $('.clear').on('click', function() {
+    doClear();
+  });
+
+  $(document).on('keyup', '.text.fullwidth',function(){
+    $('.clear').removeClass('hidden');
+    $('.spinner').removeClass('hidden');
+    clearTimeout(timer);
+    timer = setTimeout(function() {
+      var searchterm = encodeURIComponent($('.text.fullwidth').val());
+
+      var data = {search: searchterm};
+
+      doAjax(data, '/actions/SingleTemplateCache/search');
+    }, 300);
+  });
+
+  $(document).on('click', '.multipleDelete', function() {
+    $ids = [];
+
+    $('body').find('#caches .sel').each(function() {
+      $ids.push($(this).attr('data-id'));
+    });
+
+    var data = {id: $ids};
+    doAjax(data, '/actions/SingleTemplateCache/deleteMany', doClear);
+  });
+
+  $('body').on('click','.checkbox',function() {
+    $(this).closest('tr').toggleClass('sel');
+
+    if ($('body').find('#caches .sel').length > 0) {
+      if ($('.multipleDelete').hasClass('disabled')) {
+        $('.multipleDelete').removeClass('disabled')
+      }
+    } else {
+      $('.multipleDelete').addClass('disabled')
+    }
+  });
+{% endset %}
+
+{% includeJs js %}

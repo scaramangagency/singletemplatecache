@@ -45,7 +45,7 @@ class SingleTemplateCacheController extends BaseController
   {
     $this->requireAjaxRequest();
 
-    $search = craft()->request->getRequiredPost('search');
+    $search = urldecode(craft()->request->getRequiredPost('search'));
 
     $cache = craft()->db->createCommand()
                 ->select('id, cacheKey, path')

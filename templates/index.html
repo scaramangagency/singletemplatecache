@@ -38,7 +38,7 @@
       <div class="tableview">
         <table id="caches" class="data fullwidth">
           <thead>
-            <td class="thin checkbox-cell">&nbsp;</td>
+            <td class="thin checkbox-cell"><div class="checkbox checkbox--all" title="Select"></div></td>
             <th scope="col">{{ 'Cache Key'|t }}</th>
             <th scope="col">{{ 'Path'|t }}</th>
             <th style="width: 60px">{{ 'Delete'|t }}</th>
@@ -101,6 +101,7 @@
   function doClear() {
     $('.text.fullwidth').val('');
     $('.spinner').removeClass('hidden');
+    $('.multipleDelete').addClass('disabled');
 
     $(this).addClass('hidden');
     var data = { search: '' };
@@ -147,6 +148,12 @@
     } else {
       $('.multipleDelete').addClass('disabled')
     }
+  });
+
+  $('body').on('click','.checkbox--all',function() {
+    $('body').find('#caches .checkbox').each(function() {
+      $(this).closest('tr').toggleClass('sel');
+    });
   });
 {% endset %}
 

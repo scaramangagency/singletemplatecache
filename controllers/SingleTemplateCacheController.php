@@ -58,10 +58,10 @@ class SingleTemplateCacheController extends BaseController
 
     foreach ($cache as $record) {
       $html .= '<tr data-id="'.$record['cacheKey'].'" data-name="'.$record['cacheKey'].'">';
-        $html .= '<td width="4%"><div class="checkbox" title="Select" data-id="'.$record['cacheKey'].'"></div></td>';
-        $html .= '<td width="45%">'.$record['cacheKey'].'</td>';
-        $html .= '<td width="45%">'.$record['path'].'</td>';
-        $html .= '<td width="6%"><a class="delete icon" title="Delete"></a></td>';
+        $html .= '<td><div class="checkbox" title="Select" data-id="'.$record['cacheKey'].'"></div></td>';
+        $html .= '<td>'.$record['cacheKey'].'</td>';
+        $html .= '<td>'.$record['path'].'</td>';
+        $html .= '<td><a class="delete icon" title="Delete"></a></td>';
       $html .= '</tr>';
     }
     $this->returnJson(array('html' => $html));

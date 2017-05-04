@@ -15,7 +15,7 @@ class SingleTemplateCachePlugin extends BasePlugin
 
     public function getDeveloper()
     {
-        return 'Joshua Martin';
+        return 'Thoughtful Web Limited';
     }
 
     public function getDeveloperUrl()

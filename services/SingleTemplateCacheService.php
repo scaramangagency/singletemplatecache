@@ -8,14 +8,23 @@ class SingleTemplateCacheService extends BaseApplicationComponent
    * Get all of the template caches
    * @return Array
    */
-  public function getAll()
+  public function getAll($countOnly = false)
   {
-      $cache = craft()->db->createCommand()
-                  ->select('id, cacheKey, path')
-                  ->from('templatecaches')
-                  ->group('cacheKey')
-                  ->queryAll();
+    $query = craft()->db->createCommand();
 
-      return $cache;
+    if ($countOnly)
+    {
+      $query->select('id')
+            ->from('templatecaches');
+    }
+    else
+    {
+      $query->select('id, cacheKey, path, body, locale, expiryDate')
+            ->from('templatecaches')
+            ->limit(100)
+            ->order('cacheKey');
+    }
+
+    return $query->queryAll();
   }
 }

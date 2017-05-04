@@ -9,7 +9,7 @@ class SingleTemplateCacheController extends BaseController
    */
   public function __construct()
   {
-      $this->requirePostRequest();
+    $this->requirePostRequest();
   }
 
   /**
@@ -24,13 +24,13 @@ class SingleTemplateCacheController extends BaseController
 
     if (is_array($key))
     {
-         $condition = array('in', 'cacheKey', $key);
-         $params = array();
+      $condition = array('in', 'cacheKey', $key);
+      $params = array();
     }
     else
     {
-         $condition = 'cacheKey = :cacheKey';
-         $params = array(':cacheKey' => $key);
+      $condition = 'cacheKey = :cacheKey';
+      $params = array(':cacheKey' => $key);
     }
 
     $result = craft()->db->createCommand()->delete('templatecaches', $condition, $params);
@@ -46,24 +46,35 @@ class SingleTemplateCacheController extends BaseController
     $this->requireAjaxRequest();
 
     $search = urldecode(craft()->request->getRequiredPost('search'));
+    $page = urldecode(craft()->request->getPost('page'));
 
-    $cache = craft()->db->createCommand()
-                ->select('id, cacheKey, path')
-                ->from('templatecaches')
-                ->where('cacheKey LIKE "%'.$search.'%"')
-                ->group('cacheKey')
-                ->queryAll();
+    $query = craft()->db->createCommand()
+              ->select('id, cacheKey, path, body, locale, expiryDate')
+              ->from('templatecaches')
+              ->where('cacheKey LIKE "%'.$search.'%"')
+              ->limit(100);
+
+    if (isset($page))
+    {
+      $query->offset(100*$page);
+    }
+
+    $query = $query->queryAll();
 
     $html = '';
 
-    foreach ($cache as $record) {
+    foreach ($query as $record)
+    {
       $html .= '<tr data-id="'.$record['cacheKey'].'" data-name="'.$record['cacheKey'].'">';
         $html .= '<td><div class="checkbox" title="Select" data-id="'.$record['cacheKey'].'"></div></td>';
         $html .= '<td>'.$record['cacheKey'].'</td>';
         $html .= '<td>'.$record['path'].'</td>';
+        $html .= '<td>'.$record['expiryDate'].'</td>';
+        $html .= '<td>'.$record['locale'].'</td>';
         $html .= '<td><a class="delete icon" title="Delete"></a></td>';
       $html .= '</tr>';
     }
+
     $this->returnJson(array('html' => $html));
   }
 }

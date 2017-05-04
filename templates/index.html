@@ -3,9 +3,9 @@
 
 {% set title = 'Delete A Single Template Cache'|t %}
 {% set caches = craft.SingleTemplateCache.getAll %}
+{% set totalCount = craft.SingleTemplateCache.count %}
 
 {% set content %}
-
 
   {% if caches|length == 0 %}
     <p id="no-reroutes">{{ 'There are no template caches!'|t }}</p>
@@ -41,7 +41,9 @@
             <td class="thin checkbox-cell"><div class="checkbox checkbox--all" title="Select"></div></td>
             <th scope="col">{{ 'Cache Key'|t }}</th>
             <th scope="col">{{ 'Path'|t }}</th>
-            <th style="width: 60px">{{ 'Delete'|t }}</th>
+            <th scope="col">{{ 'Expiry Date'|t }}</td>
+            <th scope="col" style="width: 60px">{{ 'Locale'|t }}</td>
+            <th scope="col" style="width: 60px">{{ 'Delete'|t }}</th>
           </thead>
           <tbody class="caches--replace">
             {% for cache in caches %}
@@ -49,6 +51,8 @@
                 <td><div class="checkbox" title="Select" data-id="{{ cache.cacheKey }}"></div></td>
                 <td>{{ cache.cacheKey }}</td>
                 <td>{{ cache.path }}</td>
+                <td>{{ cache.expiryDate }}</td>
+                <td>{{ cache.locale }}</td>
                 <td><a class="delete icon" title="{{ 'Delete'|t }}"></a></td>
               </tr>
             {% endfor %}
@@ -56,6 +60,7 @@
         </table>
       </div>
     </div>
+    <div class="centeralign loadingmore--parent hidden"><div class="spinner loadingmore"></div></div>
 
     <div class="buttons">
       <a class="btn submit disabled multipleDelete icon">{{ 'Delete selected'|t }}</a>
@@ -76,7 +81,7 @@
   window.csrfTokenName = "{{ craft.config.csrfTokenName|e('js') }}";
   window.csrfTokenValue = "{{ craft.request.csrfToken|e('js') }}";
 
-  function doAjax(post, method, callback) {
+  function doAjax(post, method, append, callback) {
     post[csrfTokenName] = csrfTokenValue;
 
     $.ajax({
@@ -85,7 +90,11 @@
       data: post,
       success: function(data) {
         $('.spinner').addClass('hidden');
-        $('tbody.caches--replace').html(data['html']);
+        if (append) {
+          $('tbody.caches--replace').append(data['html']);
+        } else {
+          $('tbody.caches--replace').html(data['html']);
+        }
 
         new Craft.AdminTable({
           tableSelector: '#caches',
@@ -107,7 +116,7 @@
     var data = { search: '' };
     data[csrfTokenName] = csrfTokenValue;
 
-    doAjax(data, '/actions/SingleTemplateCache/search');
+    doAjax(data, '/actions/SingleTemplateCache/search', false);
   }
 
   $('.clear').on('click', function() {
@@ -135,7 +144,7 @@
     });
 
     var data = {id: $ids};
-    doAjax(data, '/actions/SingleTemplateCache/delete', doClear);
+    doAjax(data, '/actions/SingleTemplateCache/delete', false, doClear);
   });
 
   $('body').on('click','.checkbox',function() {
@@ -154,6 +163,31 @@
     $('body').find('#caches .checkbox').each(function() {
       $(this).closest('tr').toggleClass('sel');
     });
+  });
+
+  page = 2, count = 100, processing = false;
+
+  $(window).scroll(function() {
+
+    if ($(window).scrollTop() >=  $('.tableview').height() - 500) {
+      if(count < {{totalCount|length}}) {
+
+        if (!processing) {
+          processing = true;
+          $('.loadingmore--parent').removeClass('hidden');
+
+          var searchterm = encodeURIComponent($('.text.fullwidth').val());
+          var data = {search: searchterm, page: page};
+
+          doAjax(data, '/actions/SingleTemplateCache/search', true, function() {
+            page++;
+            count = count + 100;
+            processing = false;
+            $('.loadingmore--parent').addClass('hidden');
+          });
+        }
+      }
+    }
   });
 {% endset %}
 

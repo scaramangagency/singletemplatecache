@@ -52,6 +52,7 @@ class SingleTemplateCacheController extends BaseController
               ->select('id, cacheKey, path, body, locale, expiryDate')
               ->from('templatecaches')
               ->where('cacheKey LIKE "%'.$search.'%"')
+              ->order('cacheKey')
               ->limit(100);
 
     if (isset($page))
@@ -61,6 +62,7 @@ class SingleTemplateCacheController extends BaseController
 
     $query = $query->queryAll();
 
+    $count = count($query);
     $html = '';
 
     foreach ($query as $record)
@@ -75,6 +77,6 @@ class SingleTemplateCacheController extends BaseController
       $html .= '</tr>';
     }
 
-    $this->returnJson(array('html' => $html));
+    $this->returnJson(array('html' => $html, 'count' => $count));
   }
 }

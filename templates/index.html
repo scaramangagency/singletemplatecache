@@ -76,7 +76,7 @@
     deleteAction: 'SingleTemplateCache/delete'
   });
 
-  var timer;
+  var timer, empty;
 
   window.csrfTokenName = "{{ craft.config.csrfTokenName|e('js') }}";
   window.csrfTokenValue = "{{ craft.request.csrfToken|e('js') }}";
@@ -96,6 +96,8 @@
           $('tbody.caches--replace').html(data['html']);
         }
 
+        empty = (data['count'] == 0) ? true : false;
+
         new Craft.AdminTable({
           tableSelector: '#caches',
           deleteAction: 'SingleTemplateCache/delete'
@@ -112,7 +114,6 @@
     $('.spinner').removeClass('hidden');
     $('.multipleDelete').addClass('disabled');
 
-    $(this).addClass('hidden');
     var data = { search: '' };
     data[csrfTokenName] = csrfTokenValue;
 
@@ -121,6 +122,7 @@
 
   $('.clear').on('click', function() {
     doClear();
+    $(this).addClass('hidden');
   });
 
   $(document).on('keyup', '.text.fullwidth',function(){
@@ -168,11 +170,10 @@
   page = 2, count = 100, processing = false;
 
   $(window).scroll(function() {
-
-    if ($(window).scrollTop() >=  $('.tableview').height() - 500) {
+    if ($(window).scrollTop() >=  $('.tableview').height() - $(window).height()) {
       if(count < {{totalCount|length}}) {
 
-        if (!processing) {
+        if (!processing && !empty) {
           processing = true;
           $('.loadingmore--parent').removeClass('hidden');
 
